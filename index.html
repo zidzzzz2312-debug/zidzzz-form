@@ -27,12 +27,14 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#211e2b;color:#f4efff
 <header><div class="brand"><span class="logo">Z</span><span>ZIDZZZ Forms</span></div><div class="row"><span id="userLabel" class="tiny"></span><button id="logoutBtn" class="secondary hidden">Keluar</button></div></header>
 <div id="setupView" class="auth hidden">
  <div class="card"><div class="brandbig">Hubungkan database</div><p class="muted">ZIDZZZ Forms memakai Supabase sebagai database online. Buat project Supabase gratis, lalu masukkan URL project dan publishable/anon key.</p>
+  <div class="status">Untuk Vercel, konfigurasi publik perlu ikut di file HTML supaya pengunjung dari perangkat lain dapat membuka formulir. Isi konstanta DEPLOY_SUPABASE_URL dan DEPLOY_SUPABASE_KEY di bagian script sebelum deploy.</div>
   <div class="field"><label>Supabase Project URL</label><input id="sbUrl" placeholder="https://xxxx.supabase.co"></div>
   <div class="field"><label>Supabase anon / publishable key</label><textarea id="sbKey" placeholder="eyJ... atau sb_publishable_..." style="min-height:75px"></textarea></div>
   <button id="connectBtn" style="width:100%">Sambungkan</button><div id="setupMsg" class="status">Kredensial disimpan hanya di browser ini. Jangan pernah masukkan service_role key.</div>
   <details><summary>Belum punya database? Lihat petunjuk setup</summary>
    <ol><li>Buka <b>supabase.com</b>, buat project.</li><li>Di Project Settings → API, salin Project URL dan anon/public key.</li><li>Buka SQL Editor → New query, lalu jalankan SQL di bawah ini.</li></ol>
    <button class="secondary" id="copySql">Salin SQL database</button><pre id="sqlText"></pre>
+   <p class="tiny">Setelah menghubungkan database, salin URL dan anon/publishable key ke dua konstanta DEPLOY_SUPABASE_URL dan DEPLOY_SUPABASE_KEY pada file ini, lalu deploy ulang ke Vercel.</p>
   </details>
  </div>
 </div>
@@ -74,6 +76,11 @@ pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#211e2b;color:#f4efff
 <div class="footer">ZIDZZZ Forms • Form builder berbasis HTML + Supabase</div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+// VERCEL CONFIG: isi dengan Project URL dan anon/publishable key Supabase.
+// Jangan pernah memakai service_role key di website publik.
+const DEPLOY_SUPABASE_URL = "ISI_PROJECT_URL_SUPABASE_DI_SINI";
+const DEPLOY_SUPABASE_KEY = "ISI_ANON_ATAU_PUBLISHABLE_KEY_DI_SINI";
+
 const SQL = `create table if not exists public.forms (
  id uuid primary key default gen_random_uuid(),
  owner_id uuid not null references auth.users(id) on delete cascade,
@@ -104,7 +111,12 @@ drop policy if exists "Submit to published forms" on public.responses;
 create policy "Submit to published forms" on public.responses for insert to anon, authenticated with check (exists (select 1 from public.forms f where f.id = form_id and f.is_published = true));
 drop policy if exists "Owners read responses" on public.responses;
 create policy "Owners read responses" on public.responses for select to authenticated using (exists (select 1 from public.forms f where f.id = form_id and f.owner_id = auth.uid()));
--- Tidak ada policy update/delete untuk responses: pengunjung tidak dapat membaca jawaban orang lain.`;
+-- Hak akses API; RLS di atas tetap membatasi baris yang boleh diakses.
+grant usage on schema public to anon, authenticated;
+grant select on public.forms to anon, authenticated;
+grant insert, update, delete on public.forms to authenticated;
+grant insert on public.responses to anon, authenticated;
+grant select on public.responses to authenticated;`;
 let sb=null,user=null,authMode="login",currentForm=null,questions=[],responses=[],publicForm=null;
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -117,7 +129,9 @@ function switchMain(view){["dashboardView","editorView","responsesView"].forEach
 function boot(){
  $("sqlText").textContent=SQL;
  const params=new URLSearchParams(location.search),formId=params.get("form");
- const url=localStorage.getItem("zf_url"),key=localStorage.getItem("zf_key");
+ const embeddedUrl=DEPLOY_SUPABASE_URL.startsWith("https://")?DEPLOY_SUPABASE_URL:"";
+ const embeddedKey=(DEPLOY_SUPABASE_KEY.startsWith("sb_publishable_")||DEPLOY_SUPABASE_KEY.startsWith("eyJ"))?DEPLOY_SUPABASE_KEY:"";
+ const url=embeddedUrl||localStorage.getItem("zf_url"),key=embeddedKey||localStorage.getItem("zf_key");
  if(!url||!key){show("setupView");return}
  if(!window.supabase){msg("setupMsg","Library Supabase belum termuat. Periksa koneksi internet.","bad");show("setupView");return}
  sb=window.supabase.createClient(url,key);
@@ -210,7 +224,12 @@ $("exportResponses").onclick=()=>{
 async function loadPublic(id){
  hide("setupView");hide("authView");hide("appView");hide("logoutBtn");show("publicView");
  let {data,error}=await sb.from("forms").select("id,title,description,questions,is_published").eq("id",id).single();
- if(error||!data||!data.is_published){$("publicTitle").textContent="Formulir tidak tersedia";$("publicDesc").textContent="Link salah, formulir belum dipublikasikan, atau sudah dihapus.";hide("sendResponse");return}
+ if(error||!data||!data.is_published){
+  $("publicTitle").textContent="Formulir tidak tersedia";
+  const detail=error?.message||"Data formulir tidak ditemukan atau statusnya masih Draft.";
+  $("publicDesc").textContent="Tidak dapat memuat formulir. Detail: "+detail+". Pastikan database yang dipasang pada file Vercel sama dengan database pemilik dan formulir sudah dipublikasikan.";
+  hide("sendResponse");return
+ }
  publicForm=data;$("publicTitle").textContent=data.title;$("publicDesc").textContent=data.description||"";$("publicQuestions").innerHTML="";
  (data.questions||[]).forEach((q,i)=>{
   let d=document.createElement("div");d.className="question-answer";let req=q.required?' <span style="color:#b42318">*</span>':"";
