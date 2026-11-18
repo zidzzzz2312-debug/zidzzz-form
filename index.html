@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ZIDZZZ Forms</title>
+<style>
+:root{--p:#6750a4;--p2:#4f3b88;--bg:#f6f5fa;--ink:#242230;--muted:#777487;--line:#e5e2ec;--card:#fff;--good:#16845b;--bad:#b42318}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif}
+button,input,textarea,select{font:inherit}button{cursor:pointer;border:0;border-radius:10px;padding:10px 15px;background:var(--p);color:#fff;font-weight:650}button:hover{background:var(--p2)}button:disabled{opacity:.5;cursor:not-allowed}.secondary{background:#efedf5;color:#393449}.danger{background:#fff0ef;color:#a22}.outline{background:white;color:var(--p);border:1px solid var(--line)}
+header{height:64px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 max(18px,calc((100vw - 1100px)/2));position:sticky;top:0;z-index:4}
+.brand{display:flex;gap:10px;align-items:center;font-weight:850;font-size:19px;letter-spacing:-.4px}.logo{width:34px;height:34px;border-radius:11px;background:var(--p);color:white;display:grid;place-items:center;font-weight:900}
+.wrap{max-width:1100px;margin:28px auto;padding:0 18px}.hero{margin:20px 0 25px}.hero h1{font-size:30px;letter-spacing:-1px;margin:0 0 4px}.muted{color:var(--muted)}.tiny{font-size:12px;color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:20px;margin-bottom:16px;box-shadow:0 3px 14px #241b3d08}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.between{justify-content:space-between}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+input,textarea,select{width:100%;border:1px solid #d8d5e1;border-radius:9px;padding:11px 12px;background:white;color:var(--ink);outline:none}input:focus,textarea:focus,select:focus{border-color:var(--p);box-shadow:0 0 0 3px #6750a41b}textarea{min-height:90px;resize:vertical}label{display:block;font-weight:650;margin:0 0 6px}.field{margin:14px 0}.hidden{display:none!important}
+.tabs{display:flex;gap:7px;border-bottom:1px solid var(--line);margin:15px 0}.tab{background:transparent;color:var(--muted);border-radius:0;padding:10px 13px;border-bottom:3px solid transparent}.tab.active{color:var(--p);border-color:var(--p)}
+.form-card{border:1px solid var(--line);border-radius:13px;padding:17px;background:#fff;margin:12px 0}.qhead{display:flex;align-items:center;justify-content:space-between;gap:8px}.qtitle{font-weight:750}.pill{font-size:11px;background:#f0edf8;color:var(--p);padding:4px 8px;border-radius:99px}
+.question-answer{padding:12px 0;border-bottom:1px solid var(--line)}.question-answer:last-child{border:0}.choice{display:flex;gap:9px;align-items:center;margin:8px 0;font-weight:400}.choice input{width:auto}
+.status{padding:10px 12px;border-radius:10px;background:#f0edf8;color:#51417d;margin:10px 0;font-size:13px}.status.good{background:#eaf7f0;color:#126442}.status.bad{background:#fff0ef;color:#a22}
+.stat{font-size:26px;font-weight:800}.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:480px}th,td{text-align:left;padding:11px;border-bottom:1px solid var(--line);vertical-align:top;font-size:13px}th{background:#faf9fc}
+.auth{max-width:460px;margin:8vh auto;padding:0 16px}.auth .card{padding:26px}.brandbig{font-size:25px;font-weight:850;margin-bottom:5px}.footer{text-align:center;color:var(--muted);font-size:12px;padding:25px}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#211e2b;color:#f4efff;border-radius:10px;padding:14px;font-size:12px;max-height:340px;overflow:auto}
+@media(max-width:600px){header{padding:0 14px}.wrap{margin:16px auto;padding:0 12px}.hero h1{font-size:25px}.card{padding:15px}.hide-mobile{display:none}}
+</style>
+</head>
+<body>
+<header><div class="brand"><span class="logo">Z</span><span>ZIDZZZ Forms</span></div><div class="row"><span id="userLabel" class="tiny"></span><button id="logoutBtn" class="secondary hidden">Keluar</button></div></header>
+<div id="setupView" class="auth hidden">
+ <div class="card"><div class="brandbig">Hubungkan database</div><p class="muted">ZIDZZZ Forms memakai Supabase sebagai database online. Buat project Supabase gratis, lalu masukkan URL project dan publishable/anon key.</p>
+  <div class="field"><label>Supabase Project URL</label><input id="sbUrl" placeholder="https://xxxx.supabase.co"></div>
+  <div class="field"><label>Supabase anon / publishable key</label><textarea id="sbKey" placeholder="eyJ... atau sb_publishable_..." style="min-height:75px"></textarea></div>
+  <button id="connectBtn" style="width:100%">Sambungkan</button><div id="setupMsg" class="status">Kredensial disimpan hanya di browser ini. Jangan pernah masukkan service_role key.</div>
+  <details><summary>Belum punya database? Lihat petunjuk setup</summary>
+   <ol><li>Buka <b>supabase.com</b>, buat project.</li><li>Di Project Settings → API, salin Project URL dan anon/public key.</li><li>Buka SQL Editor → New query, lalu jalankan SQL di bawah ini.</li></ol>
+   <button class="secondary" id="copySql">Salin SQL database</button><pre id="sqlText"></pre>
+  </details>
+ </div>
+</div>
+<div id="authView" class="auth hidden">
+ <div class="card"><div class="brandbig">Selamat datang 👋</div><p class="muted">Masuk atau buat akun untuk mengelola formulir kamu.</p>
+  <div class="tabs"><button class="tab active" data-auth="login">Masuk</button><button class="tab" data-auth="signup">Daftar akun</button></div>
+  <div class="field"><label>Email</label><input id="authEmail" type="email" autocomplete="email" placeholder="email@contoh.com"></div>
+  <div class="field"><label>Password</label><input id="authPass" type="password" autocomplete="current-password" placeholder="Minimal 6 karakter"></div>
+  <button id="authSubmit" style="width:100%">Masuk</button><div id="authMsg" class="status hidden"></div>
+  <p class="tiny">Akun dikelola oleh Supabase Auth. Gunakan email milikmu sendiri.</p>
+ </div>
+</div>
+<div id="appView" class="hidden">
+ <main class="wrap">
+  <section id="dashboardView">
+   <div class="hero row between"><div><h1>Formulir kamu</h1><div class="muted">Buat, bagikan, dan kelola jawaban dalam satu tempat.</div></div><button id="newFormBtn">＋ Buat formulir</button></div>
+   <div id="dashboardMsg" class="status hidden"></div><div id="formsList" class="grid"></div>
+   <div id="noForms" class="card muted">Belum ada formulir. Tekan <b>Buat formulir</b> untuk memulai.</div>
+  </section>
+  <section id="editorView" class="hidden">
+   <div class="row between"><button class="secondary" id="backDashboard">← Kembali</button><div class="row"><button class="outline" id="previewBtn">Pratinjau</button><button id="saveFormBtn">Simpan</button></div></div>
+   <div class="hero"><h1 id="editorHeading">Formulir baru</h1><div class="muted">Atur detail dan pertanyaan formulir.</div></div>
+   <div class="card"><div class="field"><label>Judul formulir</label><input id="formTitle" maxlength="150" placeholder="Contoh: Pendaftaran anggota"></div><div class="field"><label>Deskripsi</label><textarea id="formDescription" placeholder="Jelaskan tujuan formulir..."></textarea></div>
+    <div class="row between"><label style="margin:0">Status publikasi</label><select id="formPublished" style="width:auto"><option value="false">Draft (belum bisa diisi)</option><option value="true">Publikasikan (bisa diisi)</option></select></div>
+   </div>
+   <div class="row between"><h2>Pertanyaan</h2><button id="addQuestion">＋ Tambah pertanyaan</button></div>
+   <div id="questionsEditor"></div>
+   <div class="card"><div class="row between"><div><b>Link formulir</b><div class="tiny">Bagikan link ini setelah formulir dipublikasikan.</div></div><button class="secondary" id="copyFormLink">Salin link</button></div><div id="formLinkText" class="tiny" style="overflow-wrap:anywhere;margin-top:9px"></div></div>
+  </section>
+  <section id="responsesView" class="hidden">
+   <div class="row between"><button class="secondary" id="backFromResponses">← Kembali</button><button class="outline" id="exportResponses">Ekspor CSV</button></div>
+   <div class="hero"><h1 id="responseTitle">Jawaban</h1><div class="muted">Jawaban yang dikirim melalui link formulir.</div></div>
+   <div class="card"><div class="stat" id="responseCount">0</div><div class="muted">Total jawaban</div></div>
+   <div class="card"><div class="tablewrap"><table><thead id="responseHead"></thead><tbody id="responseBody"></tbody></table></div><div id="noResponses" class="muted">Belum ada jawaban.</div></div>
+  </section>
+ </main>
+</div>
+<div id="publicView" class="hidden"><main class="wrap" style="max-width:760px"><div class="card"><div class="pill">ZIDZZZ FORMS</div><h1 id="publicTitle" style="font-size:28px;margin:12px 0 5px"></h1><p class="muted" id="publicDesc"></p><div id="publicQuestions"></div><button id="sendResponse" style="width:100%;margin-top:15px">Kirim jawaban</button><div id="publicMsg" class="status hidden"></div></div></main></div>
+<div class="footer">ZIDZZZ Forms • Form builder berbasis HTML + Supabase</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SQL = `create table if not exists public.forms (
+ id uuid primary key default gen_random_uuid(),
+ owner_id uuid not null references auth.users(id) on delete cascade,
+ title text not null default 'Formulir tanpa judul',
+ description text not null default '',
+ questions jsonb not null default '[]'::jsonb,
+ is_published boolean not null default false,
+ created_at timestamptz not null default now(),
+ updated_at timestamptz not null default now()
+);
+create table if not exists public.responses (
+ id uuid primary key default gen_random_uuid(),
+ form_id uuid not null references public.forms(id) on delete cascade,
+ answers jsonb not null default '{}'::jsonb,
+ created_at timestamptz not null default now()
+);
+alter table public.forms enable row level security;
+alter table public.responses enable row level security;
+drop policy if exists "Read published forms or own forms" on public.forms;
+create policy "Read published forms or own forms" on public.forms for select using (is_published = true or auth.uid() = owner_id);
+drop policy if exists "Create own forms" on public.forms;
+create policy "Create own forms" on public.forms for insert to authenticated with check (auth.uid() = owner_id);
+drop policy if exists "Update own forms" on public.forms;
+create policy "Update own forms" on public.forms for update to authenticated using (auth.uid() = owner_id) with check (auth.uid() = owner_id);
+drop policy if exists "Delete own forms" on public.forms;
+create policy "Delete own forms" on public.forms for delete to authenticated using (auth.uid() = owner_id);
+drop policy if exists "Submit to published forms" on public.responses;
+create policy "Submit to published forms" on public.responses for insert to anon, authenticated with check (exists (select 1 from public.forms f where f.id = form_id and f.is_published = true));
+drop policy if exists "Owners read responses" on public.responses;
+create policy "Owners read responses" on public.responses for select to authenticated using (exists (select 1 from public.forms f where f.id = form_id and f.owner_id = auth.uid()));
+-- Tidak ada policy update/delete untuk responses: pengunjung tidak dapat membaca jawaban orang lain.`;
+let sb=null,user=null,authMode="login",currentForm=null,questions=[],responses=[],publicForm=null;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const show=id=>$(id).classList.remove("hidden"),hide=id=>$(id).classList.add("hidden");
+function msg(id,text,kind=""){ $(id).textContent=text;$(id).className="status "+kind;show(id)}
+function baseUrl(){return location.href.split("?")[0].split("#")[0]}
+function formUrl(id){return baseUrl()+"?form="+encodeURIComponent(id)}
+function makeId(){return "q_"+Math.random().toString(36).slice(2,10)}
+function switchMain(view){["dashboardView","editorView","responsesView"].forEach(x=>hide(x));show(view)}
+function boot(){
+ $("sqlText").textContent=SQL;
+ const params=new URLSearchParams(location.search),formId=params.get("form");
+ const url=localStorage.getItem("zf_url"),key=localStorage.getItem("zf_key");
+ if(!url||!key){show("setupView");return}
+ if(!window.supabase){msg("setupMsg","Library Supabase belum termuat. Periksa koneksi internet.","bad");show("setupView");return}
+ sb=window.supabase.createClient(url,key);
+ if(formId){loadPublic(formId);return}
+ show("authView");
+ sb.auth.getSession().then(({data})=>{if(data.session){user=data.session.user;openApp()}});
+}
+$("connectBtn").onclick=()=>{
+ const url=$("sbUrl").value.trim().replace(/\/$/,""),key=$("sbKey").value.trim();
+ if(!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(url)||!key){msg("setupMsg","Masukkan URL project Supabase dan anon/publishable key yang benar.","bad");return}
+ localStorage.setItem("zf_url",url);localStorage.setItem("zf_key",key);location.reload();
+};
+$("copySql").onclick=()=>navigator.clipboard.writeText(SQL).then(()=>msg("setupMsg","SQL berhasil disalin. Tempel di Supabase SQL Editor lalu tekan Run.","good")).catch(()=>msg("setupMsg","Salin teks SQL dari kotak di atas secara manual.","bad"));
+document.querySelectorAll("[data-auth]").forEach(b=>b.onclick=()=>{authMode=b.dataset.auth;document.querySelectorAll("[data-auth]").forEach(x=>x.classList.toggle("active",x===b));$("authSubmit").textContent=authMode==="login"?"Masuk":"Buat akun";});
+$("authSubmit").onclick=async()=>{
+ const email=$("authEmail").value.trim(),password=$("authPass").value;
+ if(!email||password.length<6){msg("authMsg","Masukkan email dan password minimal 6 karakter.","bad");return}
+ $("authSubmit").disabled=true;
+ let r=authMode==="login"?await sb.auth.signInWithPassword({email,password}):await sb.auth.signUp({email,password});
+ $("authSubmit").disabled=false;
+ if(r.error){msg("authMsg",r.error.message,"bad");return}
+ if(authMode==="signup"&&!r.data.session){msg("authMsg","Akun dibuat. Periksa email untuk konfirmasi, lalu masuk.","good");return}
+ user=r.data.user;openApp();
+};
+async function openApp(){hide("setupView");hide("authView");hide("publicView");show("appView");show("logoutBtn");$("userLabel").textContent=user?.email||"";switchMain("dashboardView");await loadForms()}
+$("logoutBtn").onclick=async()=>{await sb.auth.signOut();location.href=baseUrl()};
+async function loadForms(){
+ const {data,error}=await sb.from("forms").select("*").eq("owner_id",user.id).order("updated_at",{ascending:false});
+ if(error){msg("dashboardMsg",error.message,"bad");return}
+ $("formsList").innerHTML="";$("noForms").classList.toggle("hidden",!!data.length);
+ data.forEach(f=>{
+  const el=document.createElement("div");el.className="card";
+  el.innerHTML=`<div class="row between"><span class="pill">${f.is_published?"Dipublikasikan":"Draft"}</span><span class="tiny">${new Date(f.updated_at).toLocaleDateString("id-ID")}</span></div><h3>${esc(f.title)}</h3><p class="muted tiny">${esc(f.description||"Tanpa deskripsi")}</p><div class="row"><button class="small" data-edit="${f.id}">Edit</button><button class="small secondary" data-res="${f.id}">Jawaban</button><button class="small outline" data-share="${f.id}">Bagikan</button><button class="small danger" data-del="${f.id}">Hapus</button></div>`;
+  $("formsList").appendChild(el);
+ });
+ $("formsList").querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>editForm(data.find(f=>f.id===b.dataset.edit)));
+ $("formsList").querySelectorAll("[data-res]").forEach(b=>b.onclick=()=>openResponses(data.find(f=>f.id===b.dataset.res)));
+ $("formsList").querySelectorAll("[data-share]").forEach(b=>b.onclick=()=>{let f=data.find(x=>x.id===b.dataset.share);if(!f.is_published){alert("Publikasikan formulir dahulu.");return}navigator.clipboard.writeText(formUrl(f.id)).then(()=>alert("Link formulir disalin."))});
+ $("formsList").querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{if(confirm("Hapus formulir dan seluruh jawabannya?")){let {error}=await sb.from("forms").delete().eq("id",b.dataset.del);if(error)alert(error.message);else loadForms()}});
+}
+function blankForm(){currentForm=null;questions=[{id:makeId(),title:"Pertanyaan tanpa judul",type:"short",required:false,options:["Pilihan 1","Pilihan 2"]}];$("formTitle").value="Formulir tanpa judul";$("formDescription").value="";$("formPublished").value="false";renderQuestionEditor();updateEditorHeading();$("formLinkText").textContent="Link akan tersedia setelah disimpan."}
+function editForm(f){currentForm=f;questions=JSON.parse(JSON.stringify(f.questions||[]));$("formTitle").value=f.title;$("formDescription").value=f.description||"";$("formPublished").value=String(f.is_published);renderQuestionEditor();updateEditorHeading();$("formLinkText").textContent=formUrl(f.id);switchMain("editorView")}
+function updateEditorHeading(){$("editorHeading").textContent=currentForm?"Edit formulir":"Formulir baru"}
+function renderQuestionEditor(){
+ $("questionsEditor").innerHTML="";
+ questions.forEach((q,i)=>{
+  let d=document.createElement("div");d.className="form-card";
+  d.innerHTML=`<div class="qhead"><span class="pill">PERTANYAAN ${i+1}</span><div class="row"><button class="small secondary" data-up="${i}">↑</button><button class="small secondary" data-down="${i}">↓</button><button class="small danger" data-remove="${i}">Hapus</button></div></div>
+  <div class="field"><label>Judul pertanyaan</label><input data-q="${i}" data-k="title" value="${esc(q.title)}" placeholder="Tulis pertanyaan"></div>
+  <div class="row"><div style="flex:1;min-width:180px"><label>Jenis jawaban</label><select data-q="${i}" data-k="type">${[["short","Jawaban singkat"],["paragraph","Paragraf"],["radio","Pilihan ganda"],["checkbox","Kotak centang"],["dropdown","Dropdown"],["date","Tanggal"],["number","Angka"],["email","Email"]].map(([v,t])=>`<option value="${v}" ${q.type===v?"selected":""}>${t}</option>`).join("")}</select></div><label class="choice" style="margin-top:25px"><input type="checkbox" data-q="${i}" data-k="required" ${q.required?"checked":""}> Wajib diisi</label></div>
+  <div class="field ${["radio","checkbox","dropdown"].includes(q.type)?"":"hidden"}" data-options="${i}"><label>Opsi jawaban (satu per baris)</label><textarea data-q="${i}" data-k="options">${esc((q.options||[]).join("\n"))}</textarea></div>`;
+  $("questionsEditor").appendChild(d);
+ });
+ $("questionsEditor").querySelectorAll("[data-q]").forEach(el=>el.onchange=()=>{let q=questions[+el.dataset.q],k=el.dataset.k;q[k]=k==="required"?el.checked:k==="options"?el.value.split("\n").map(x=>x.trim()).filter(Boolean):el.value;if(k==="type")renderQuestionEditor()});
+ $("questionsEditor").querySelectorAll("[data-remove]").forEach(b=>b.onclick=()=>{questions.splice(+b.dataset.remove,1);renderQuestionEditor()});
+ $("questionsEditor").querySelectorAll("[data-up]").forEach(b=>b.onclick=()=>{let i=+b.dataset.up;if(i){[questions[i-1],questions[i]]=[questions[i],questions[i-1]];renderQuestionEditor()}});
+ $("questionsEditor").querySelectorAll("[data-down]").forEach(b=>b.onclick=()=>{let i=+b.dataset.down;if(i<questions.length-1){[questions[i+1],questions[i]]=[questions[i],questions[i+1]];renderQuestionEditor()}});
+}
+$("newFormBtn").onclick=()=>{blankForm();switchMain("editorView")};
+$("addQuestion").onclick=()=>{questions.push({id:makeId(),title:"Pertanyaan baru",type:"short",required:false,options:["Pilihan 1","Pilihan 2"]});renderQuestionEditor()};
+$("backDashboard").onclick=()=>{switchMain("dashboardView");loadForms()};
+$("saveFormBtn").onclick=async()=>{
+ const title=$("formTitle").value.trim();if(!title){alert("Judul formulir wajib diisi.");return}
+ if(!questions.length){alert("Tambahkan minimal satu pertanyaan.");return}
+ const payload={owner_id:user.id,title,description:$("formDescription").value,questions,is_published:$("formPublished").value==="true",updated_at:new Date().toISOString()};
+ $("saveFormBtn").disabled=true;
+ let result=currentForm?await sb.from("forms").update(payload).eq("id",currentForm.id).select().single():await sb.from("forms").insert(payload).select().single();
+ $("saveFormBtn").disabled=false;
+ if(result.error){alert("Gagal menyimpan: "+result.error.message);return}
+ currentForm=result.data;$("formLinkText").textContent=formUrl(currentForm.id);updateEditorHeading();alert("Formulir berhasil disimpan.");
+};
+$("copyFormLink").onclick=()=>{if(!currentForm){alert("Simpan formulir dahulu.");return}if(!currentForm.is_published){alert("Ubah status menjadi Dipublikasikan lalu simpan.");return}navigator.clipboard.writeText(formUrl(currentForm.id)).then(()=>alert("Link disalin."))};
+$("previewBtn").onclick=()=>{if(!currentForm){alert("Simpan formulir dahulu untuk pratinjau.");return}window.open(formUrl(currentForm.id),"_blank")};
+async function openResponses(f){
+ currentForm=f;$("responseTitle").textContent=f.title;
+ let {data,error}=await sb.from("responses").select("*").eq("form_id",f.id).order("created_at",{ascending:false});
+ if(error){alert("Gagal memuat jawaban: "+error.message);return}
+ responses=data||[];$("responseCount").textContent=responses.length;
+ let qs=f.questions||[];$("responseHead").innerHTML="<tr><th>Waktu</th>"+qs.map(q=>`<th>${esc(q.title)}</th>`).join("")+"</tr>";
+ $("responseBody").innerHTML="";
+ responses.forEach(r=>{let tr=document.createElement("tr");tr.innerHTML=`<td>${new Date(r.created_at).toLocaleString("id-ID")}</td>`+qs.map(q=>`<td>${esc(Array.isArray(r.answers[q.id])?r.answers[q.id].join(", "):r.answers[q.id]??"—")}</td>`).join("");$("responseBody").appendChild(tr)});
+ $("noResponses").classList.toggle("hidden",!!responses.length);switchMain("responsesView");
+}
+$("backFromResponses").onclick=()=>{switchMain("dashboardView");loadForms()};
+$("exportResponses").onclick=()=>{
+ let qs=currentForm.questions||[],rows=[["Waktu",...qs.map(q=>q.title)],...responses.map(r=>[new Date(r.created_at).toLocaleString("id-ID"),...qs.map(q=>Array.isArray(r.answers[q.id])?r.answers[q.id].join("; "):r.answers[q.id]??"")])];
+ let csv=rows.map(row=>row.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(",")).join("\r\n");
+ let a=document.createElement("a"),u=URL.createObjectURL(new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"}));a.href=u;a.download="jawaban-zidzzz-forms.csv";a.click();URL.revokeObjectURL(u);
+};
+async function loadPublic(id){
+ hide("setupView");hide("authView");hide("appView");hide("logoutBtn");show("publicView");
+ let {data,error}=await sb.from("forms").select("id,title,description,questions,is_published").eq("id",id).single();
+ if(error||!data||!data.is_published){$("publicTitle").textContent="Formulir tidak tersedia";$("publicDesc").textContent="Link salah, formulir belum dipublikasikan, atau sudah dihapus.";hide("sendResponse");return}
+ publicForm=data;$("publicTitle").textContent=data.title;$("publicDesc").textContent=data.description||"";$("publicQuestions").innerHTML="";
+ (data.questions||[]).forEach((q,i)=>{
+  let d=document.createElement("div");d.className="question-answer";let req=q.required?' <span style="color:#b42318">*</span>':"";
+  let html=`<label>${esc(q.title)}${req}</label>`;
+  if(["radio","checkbox"].includes(q.type)){html+=(q.options||[]).map((o,j)=>`<label class="choice"><input type="${q.type}" name="${esc(q.id)}" value="${esc(o)}"> ${esc(o)}</label>`).join("")}
+  else if(q.type==="dropdown"){html+=`<select id="ans_${esc(q.id)}"><option value="">Pilih jawaban</option>${(q.options||[]).map(o=>`<option value="${esc(o)}">${esc(o)}</option>`).join("")}</select>`}
+  else if(q.type==="paragraph")html+=`<textarea id="ans_${esc(q.id)}"></textarea>`;
+  else html+=`<input id="ans_${esc(q.id)}" type="${q.type==="short"?"text":q.type}" ${q.type==="email"?'placeholder="nama@email.com"':""}>`;
+  d.innerHTML=html;$("publicQuestions").appendChild(d);
+ });
+ show("sendResponse");$("sendResponse").onclick=submitPublic;
+}
+async function submitPublic(){
+ const answers={};let missing=false;
+ (publicForm.questions||[]).forEach(q=>{
+  let value;
+  if(q.type==="radio"){value=document.querySelector(`input[name="${CSS.escape(q.id)}"]:checked`)?.value||""}
+  else if(q.type==="checkbox"){value=[...document.querySelectorAll(`input[name="${CSS.escape(q.id)}"]:checked`)].map(x=>x.value)}
+  else value=$("ans_"+q.id)?.value.trim()||"";
+  if(q.required&&(!value||(Array.isArray(value)&&!value.length)))missing=true;
+  answers[q.id]=value;
+ });
+ if(missing){msg("publicMsg","Lengkapi semua pertanyaan wajib terlebih dahulu.","bad");return}
+ $("sendResponse").disabled=true;
+ let {error}=await sb.from("responses").insert({form_id:publicForm.id,answers});
+ $("sendResponse").disabled=false;
+ if(error){msg("publicMsg","Jawaban belum terkirim: "+error.message,"bad");return}
+ $("publicQuestions").innerHTML="<div class='status good'>Jawaban kamu berhasil dikirim. Terima kasih!</div>";hide("sendResponse");msg("publicMsg","Respons berhasil direkam.","good");
+}
+boot();
+</script>
+</body></html>
